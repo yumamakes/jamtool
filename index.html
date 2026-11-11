@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Demons Chord Blocks</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one chord per page, tabs on top; each exercise is a row of 16-step bar grids with a live playhead synced to the jam track */
+:root{
+  --bg:#f3f4f7; --surface:#ffffff; --ink:#1b1f2e; --muted:#5d6478; --line:#d9dce5; --grid:#eceef3;
+  --beat:#e2e5ee;
+  --d1:#e0483e; --d3:#e8a21b; --d5:#1f9a8a;
+  --ch-c:#3a5bd9; --ch-g:#7a3fc4; --ch-am:#c2366f; --ch-f:#2e8a4c;
+  --kick:#1b1f2e; --snare:#5d6478; --hat:#9aa1b4;
+  --play:#ffe36b; --playline:#1b1f2e;
+  --display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12141c; --surface:#1b1e29; --ink:#eef0f6; --muted:#a2a8ba; --line:#2f3343; --grid:#232634; --beat:#2a2e3e;
+  --d1:#ff6b5f; --d3:#f5b93a; --d5:#2fc0ac;
+  --ch-c:#7d97ff; --ch-g:#b48cff; --ch-am:#ff79ad; --ch-f:#5fd08a;
+  --kick:#eef0f6; --snare:#a2a8ba; --hat:#6b7187; --play:#5b4f12; --playline:#ffe36b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12141c; --surface:#1b1e29; --ink:#eef0f6; --muted:#a2a8ba; --line:#2f3343; --grid:#232634; --beat:#2a2e3e;
+  --d1:#ff6b5f; --d3:#f5b93a; --d5:#2fc0ac;
+  --ch-c:#7d97ff; --ch-g:#b48cff; --ch-am:#ff79ad; --ch-f:#5fd08a;
+  --kick:#eef0f6; --snare:#a2a8ba; --hat:#6b7187; --play:#5b4f12; --playline:#ffe36b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:980px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:6px 0 0;max-width:62ch}
+
+/* how-to strip */
+.howto{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:20px 0}
+.howto div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:14.5px;min-width:0}
+.howto b{display:block;font-family:var(--display);font-size:15px;margin-bottom:2px}
+.legend{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;font-size:14px;color:var(--muted)}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px}
+
+/* tabs */
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:8px;padding-block:10px;flex-wrap:wrap}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.tab{font:700 15px/1 var(--display);border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:9px 14px;cursor:pointer;display:flex;gap:8px;align-items:baseline}
+.tab small{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.tab[aria-selected="true"]{border-color:var(--pc);background:var(--pc);color:var(--surface)}
+.tab[aria-selected="true"] small{color:var(--surface);opacity:.85}
+.tab:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--playline);outline-offset:2px}
+
+/* page */
+.page{--pc:var(--ch-c)}
+.page[data-k="g"]{--pc:var(--ch-g)} .page[data-k="am"]{--pc:var(--ch-am)} .page[data-k="f"]{--pc:var(--ch-f)}
+.tab[data-k="c"]{--pc:var(--ch-c)} .tab[data-k="g"]{--pc:var(--ch-g)} .tab[data-k="am"]{--pc:var(--ch-am)} .tab[data-k="f"]{--pc:var(--ch-f)}
+.phead{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-content:space-between;border-bottom:3px solid var(--pc);padding-bottom:14px;margin-top:8px}
+.eyebrow{font:700 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--pc)}
+.phead h2{font-size:clamp(30px,6vw,46px);font-weight:800;margin-top:6px}
+.tones{display:flex;gap:8px;margin-top:10px}
+.tone{font:700 18px/1 var(--display);color:#fff;border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:52px}
+.tone small{font:700 10px/1 var(--mono);opacity:.9;letter-spacing:.05em}
+.t1{background:var(--d1)} .t3{background:var(--d3)} .t5{background:var(--d5)}
+.lh{font-size:14px;color:var(--muted);margin-top:8px;max-width:48ch}
+
+/* player */
+.player{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:14px;display:grid;gap:14px;min-width:0}
+.prow{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center}
+.pbtn{font:800 17px/1 var(--display);background:var(--pc);color:#fff;border:0;border-radius:999px;padding:14px 22px;cursor:pointer;min-width:118px}
+.readout{font:700 15px/1.2 var(--mono);min-width:150px;font-variant-numeric:tabular-nums}
+.readout .big{font-size:22px}
+.dots{display:flex;gap:8px;align-items:center}
+.dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font:700 12px/1 var(--mono);color:var(--muted)}
+.dot.one{width:34px;height:34px;font-size:14px}
+.dot.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.dot.one.on{background:var(--pc);border-color:var(--pc);color:#fff}
+.ctl{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ctl .cl{font:700 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.chip{font:700 13px/1 var(--body);border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.sq{border-radius:8px;min-width:36px;font-family:var(--mono)}
+.bpm{font:700 18px/1 var(--mono);min-width:72px;text-align:center;font-variant-numeric:tabular-nums}
+.usegroove{font:700 12px/1 var(--body);border:1px solid var(--pc);color:var(--pc);background:transparent;border-radius:999px;padding:6px 10px;cursor:pointer;margin-top:8px}
+
+/* exercises */
+.ex{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 14px 16px;margin-top:14px;min-width:0}
+.ex-h{display:flex;gap:10px 14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.lvl{font:700 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ex h3{font-size:20px;font-weight:600;margin-top:4px}
+.ex p{margin:4px 0 0;max-width:68ch;font-size:15px}
+.seq{font:700 14px/1.4 var(--mono);color:var(--muted);margin-top:4px}
+.done{display:flex;gap:6px;align-items:center;font-size:13px;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap}
+.done input{width:18px;height:18px;accent-color:var(--pc)}
+.bars{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.bar{flex:1 1 300px;max-width:440px;min-width:0}
+.barnum{font:700 10px/1 var(--mono);color:var(--muted);margin-bottom:3px;letter-spacing:.06em}
+.g{display:grid;grid-template-columns:repeat(16,1fr);position:relative}
+.cnt{font:500 10.5px/1 var(--mono);text-align:center;color:var(--muted);padding:3px 0;border-left:1px solid var(--grid)}
+.cnt.b{font-weight:700;color:var(--ink);font-size:12px;border-left-color:var(--beat);background:var(--grid)}
+.notes{height:40px;background:repeating-linear-gradient(90deg,var(--beat) 0 1px,transparent 1px 25%), repeating-linear-gradient(90deg,var(--grid) 0 1px,transparent 1px 6.25%);border:1px solid var(--line);border-radius:4px}
+.n{grid-row:1;margin:4px 2px;border-radius:5px;color:#fff;font:700 15px/1 var(--display);display:flex;align-items:center;padding-left:6px;overflow:hidden;white-space:nowrap;position:relative;z-index:1}
+.n.r{background:transparent;color:var(--muted);border:1.5px dashed var(--line);font:500 11px/1 var(--mono);justify-content:center;padding:0}
+.n.x1{background:var(--d1)} .n.x3{background:var(--d3)} .n.x5{background:var(--d5)}
+.drums{height:22px}
+.dk{grid-row:1;display:flex;align-items:center;justify-content:center}
+.dk span{display:block;border-radius:50%}
+.dk.k span{width:12px;height:12px;background:var(--kick)}
+.dk.kg span{width:8px;height:8px;border:2px solid var(--kick)}
+.dk.s span{width:11px;height:11px;background:var(--snare);border-radius:2px;transform:rotate(45deg)}
+.dk.h span{width:7px;height:7px;background:var(--hat);transform:rotate(45deg);border-radius:1px}
+.ph{grid-row:1/-1;background:var(--play);opacity:.75;z-index:0;border-radius:3px;display:none}
+.ph.on{display:block}
+.g.notes .ph{margin:0}
+
+.drummap{margin-top:14px}
+.drummap .rows{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:center;margin-top:10px;max-width:640px}
+.drummap .lab{font:700 12px/1 var(--mono);color:var(--muted);text-align:right}
+.drummap .g.lane{height:26px;border:1px solid var(--line);border-radius:4px;background:repeating-linear-gradient(90deg,var(--beat) 0 1px,transparent 1px 25%)}
+.say{font:700 14px/1.6 var(--mono);margin-top:8px;overflow-x:auto;white-space:nowrap}
+.say em{font-style:normal;color:var(--muted)}
+
+.foot{margin-top:28px;color:var(--muted);font-size:14px;max-width:70ch}
+
+@media (max-width:520px){.n{font-size:13px;padding-left:3px}.cnt{font-size:9px}.cnt.b{font-size:11px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{
+  .tabs,.player,.done,body::before{display:none!important}
+  .page{display:block!important;break-before:page}
+  .page:first-of-type{break-before:auto}
+  .ex{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow" style="color:var(--muted)">Imagine Dragons · Demons · 4/4 · Key of C</div>
+    <h1>Demons Chord Blocks</h1>
+    <p class="sub">Four pages, one chord each. Play only the three notes of that page's chord, and stay locked to the band. Hit Play: you get 4 count-in clicks, then the band comes in on beat 1. The yellow marker shows exactly where you are in the bar.</p>
+  </header>
+
+  <section class="howto" aria-label="How to read this">
+    <div><b>Read the grid</b>One box = one bar of 4 beats, split into 16 slots: <span style="font-family:var(--mono)">1 e &amp; a 2 e &amp; a …</span> A colored block starts where you play and stretches as long as you hold it.</div>
+    <div><b>Note lengths</b>Whole = 4 beats (16 slots) · Half = 2 beats (8) · Quarter = 1 beat (4) · Eighth = half a beat (2). Dashed box = rest. Stay silent.</div>
+    <div><b>The rule for every level</b>Clap it with the track first. Then play it. Tick the box after 3 clean loops in a row without speeding up.</div>
+    <div class="legend" style="align-content:center">
+      <span><i class="sw" style="background:var(--d1)"></i>1 · root</span>
+      <span><i class="sw" style="background:var(--d3)"></i>3 · third</span>
+      <span><i class="sw" style="background:var(--d5)"></i>5 · fifth</span>
+    </div>
+  </section>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="pages"></main>
+
+  <p class="foot">The band plays in 4-bar phrases. A crash cymbal marks beat 1 of every phrase, and a snare roll on beat 4 of bar 4 warns that a new phrase is coming. Pop Rock is the easiest groove for keeping time. Demons is the song's real beat, used for the kick-drum levels. Once all four pages are ticked off, it's time to put I–V–vi–IV together.</p>
+</div>
+
+<script>
+const COUNTS=["1","e","&","a","2","e","&","a","3","e","&","a","4","e","&","a"];
+// The song's groove (16th-note slots, 0 = beat 1). Used for the kick-drum levels.
+const DRUMS={kick:[0,7,8,13], snare:[4,12], hat:[2,6,10,14]};
+
+// ---------- Backing band (Web Audio, synthesized live) ----------
+// Grooves: slots in a 16-step bar. gtr: "chug" = 8th-note power chords, "ring" = let-ring hits on 1 and 3.
+const STYLES={
+  rock:{name:"Pop Rock", kick:[0,8,10], snare:[4,12], hat:[0,2,4,6,8,10,12,14], open:[], bass:[0,2,4,6,8,10,12,14], oct:false, gtr:"chug",
+        say:"<b>BOOM</b> <em>tss</em> <b>TSS</b> <em>tss</em> <b>BOOM</b> <em>boom</em> <b>TSS</b> <em>tss</em>"},
+  four:{name:"Four on the Floor", kick:[0,4,8,12], snare:[4,12], hat:[], open:[2,6,10,14], bass:[0,2,4,6,8,10,12,14], oct:true, gtr:"ring",
+        say:"<b>BOOM</b> <em>tsss</em> <b>BOOM+TSS</b> <em>tsss</em> <b>BOOM</b> <em>tsss</em> <b>BOOM+TSS</b> <em>tsss</em>"},
+  demons:{name:"Demons", kick:DRUMS.kick, snare:DRUMS.snare, hat:DRUMS.hat, open:[], bass:[0,7,8,13], oct:false, gtr:"ring",
+        say:"<b>BOOM</b> <em>e and</em> tss <em>e and</em> boom-<b>BOOM</b> <em>e and a</em> <b>TSS</b>-boom <em>and a</em>"},
+};
+// MIDI notes per chord: bass root, guitar power-chord root, soft keys triad (kept below middle C so the student is on top)
+const VOICE={
+  c:{bass:36, gtr:48, keys:[52,55,60]},
+  g:{bass:31, gtr:43, keys:[50,55,59]},
+  am:{bass:33, gtr:45, keys:[52,57,60]},
+  f:{bass:29, gtr:41, keys:[53,57,60]},
+};
+const S={style:"rock", tempo:75, parts:{drums:true,bass:true,gtr:true,keys:true,click:false}};
+const hz=m=>440*Math.pow(2,(m-69)/12);
+let ctx=null, bus=null, noiseBuf=null, timer=null, step=0, nextT=0, queue=[], playingK=null, unlockEl=null;
+
+function ensureCtx(){
+  if(!ctx){
+    ctx=new (window.AudioContext||window.webkitAudioContext)();
+    noiseBuf=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate);
+    const d=noiseBuf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  }
+  // iPhone: a silent media element lets Web Audio play even with the ringer switch on silent
+  if(!unlockEl){ try{
+    const n=800, b=new ArrayBuffer(44+n*2), v=new DataView(b), w=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));
+    w(0,"RIFF");v.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+    v.setUint32(24,8000,true);v.setUint32(28,16000,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,n*2,true);
+    unlockEl=new Audio(URL.createObjectURL(new Blob([b],{type:"audio/wav"}))); unlockEl.loop=true; unlockEl.play().catch(()=>{});
+  }catch(e){} }
+  return ctx.resume();
+}
+function makeBus(){
+  const comp=ctx.createDynamicsCompressor(); comp.threshold.value=-16; comp.ratio.value=6; comp.attack.value=0.002; comp.release.value=0.15;
+  const master=ctx.createGain(); master.gain.value=0.6; comp.connect(master).connect(ctx.destination);
+  // guitar: shared distortion + cabinet filter
+  const gtrIn=ctx.createGain(), ws=ctx.createWaveShaper(), cab=ctx.createBiquadFilter(), gOut=ctx.createGain();
+  const k=28, curve=new Float32Array(1024); for(let i=0;i<1024;i++){const x=i/512-1; curve[i]=(1+k)*x/(1+k*Math.abs(x));}
+  ws.curve=curve; cab.type="lowpass"; cab.frequency.value=3200; gOut.gain.value=0.16;
+  gtrIn.connect(ws).connect(cab).connect(gOut).connect(comp);
+  return {in:comp, master, gtr:gtrIn};
+}
+function env(g,t,peak,att,dec){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+att);g.gain.exponentialRampToValueAtTime(0.0001,t+att+dec);}
+function noise(t,dur){const s=ctx.createBufferSource(); s.buffer=noiseBuf; s.start(t); s.stop(t+dur); return s;}
+
+function kick(t,v){const o=ctx.createOscillator(), g=ctx.createGain(); o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(42,t+0.13);
+  env(g,t,1.1*v,0.003,0.42); o.connect(g).connect(bus.in); o.start(t); o.stop(t+0.5);
+  const n=noise(t,0.02), f=ctx.createBiquadFilter(), g2=ctx.createGain(); f.type="highpass"; f.frequency.value=2500; env(g2,t,0.25*v,0.001,0.015); n.connect(f).connect(g2).connect(bus.in);}
+function snare(t,v){const n=noise(t,0.25), f=ctx.createBiquadFilter(), g=ctx.createGain(); f.type="highpass"; f.frequency.value=1200; env(g,t,0.55*v,0.002,0.19); n.connect(f).connect(g).connect(bus.in);
+  const o=ctx.createOscillator(), g2=ctx.createGain(); o.type="triangle"; o.frequency.setValueAtTime(210,t); o.frequency.exponentialRampToValueAtTime(160,t+0.08); env(g2,t,0.45*v,0.002,0.1); o.connect(g2).connect(bus.in); o.start(t); o.stop(t+0.15);}
+function hat(t,open,v){const n=noise(t,open?0.4:0.08), f=ctx.createBiquadFilter(), g=ctx.createGain(); f.type="highpass"; f.frequency.value=7500; env(g,t,v,0.001,open?0.3:0.045); n.connect(f).connect(g).connect(bus.in);}
+function crash(t){const n=noise(t,2), f=ctx.createBiquadFilter(), g=ctx.createGain(); f.type="highpass"; f.frequency.value=4500; env(g,t,0.32,0.002,1.7); n.connect(f).connect(g).connect(bus.in);}
+function click(t,accent){const o=ctx.createOscillator(), g=ctx.createGain(); o.type="square"; o.frequency.value=accent?1900:1300; env(g,t,accent?0.32:0.2,0.001,0.04); o.connect(g).connect(bus.in); o.start(t); o.stop(t+0.06);}
+function bass(t,m,dur){const o=ctx.createOscillator(), s=ctx.createOscillator(), f=ctx.createBiquadFilter(), g=ctx.createGain();
+  o.type="sawtooth"; o.frequency.value=hz(m); s.type="sine"; s.frequency.value=hz(m);
+  f.type="lowpass"; f.Q.value=3; f.frequency.setValueAtTime(1400,t); f.frequency.exponentialRampToValueAtTime(380,t+0.12);
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.42,t+0.008); g.gain.setTargetAtTime(0.25,t+0.02,0.1); g.gain.setTargetAtTime(0.0001,t+dur,0.025);
+  o.connect(f); s.connect(f); f.connect(g).connect(bus.in); o.start(t); s.start(t); o.stop(t+dur+0.2); s.stop(t+dur+0.2);}
+function guitar(t,root,dur,muted,v){const f=ctx.createBiquadFilter(), g=ctx.createGain(); f.type="lowpass"; f.frequency.value=muted?900:4000;
+  [0,7,12].forEach((iv,i)=>[-6,6].forEach(dt=>{const o=ctx.createOscillator(); o.type="sawtooth"; o.frequency.value=hz(root+iv); o.detune.value=dt; o.connect(f); const st=t+i*0.006; o.start(st); o.stop(t+dur+0.15);}));
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.5*v,t+0.005);
+  if(muted) g.gain.setTargetAtTime(0.0001,t+0.03,0.04); else {g.gain.setTargetAtTime(0.32*v,t+0.02,0.3); g.gain.setTargetAtTime(0.0001,t+dur,0.05);}
+  f.connect(g).connect(bus.gtr);}
+function keys(t,notes,dur){notes.forEach(m=>{const o=ctx.createOscillator(), o2=ctx.createOscillator(), g=ctx.createGain(), f=ctx.createBiquadFilter();
+  o.type="triangle"; o2.type="sine"; o.frequency.value=hz(m); o2.frequency.value=hz(m+12); f.type="lowpass"; f.frequency.value=1800;
+  g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.07,t+0.04); g.gain.setTargetAtTime(0.045,t+0.1,0.6); g.gain.setTargetAtTime(0.0001,t+dur-0.05,0.08);
+  o.connect(f); o2.connect(f); f.connect(g).connect(bus.in); o.start(t); o2.start(t); o.stop(t+dur+0.5); o2.stop(t+dur+0.5);});}
+
+const sixDur=()=>60/S.tempo/4;
+function playStep(s,t,k){
+  if(s<0){ if((s+16)%4===0) click(t,s===-16); return; }   // 1-bar count-in: 4 clicks
+  const st=STYLES[S.style], slot=s%16, bar=Math.floor(s/16), pb=bar%4, fill=pb===3&&slot>=12, sd=sixDur(), V=VOICE[k], P=S.parts;
+  if(P.drums){
+    if(slot===0 && pb===0) crash(t);
+    if(fill){ snare(t,[.45,.6,.75,.95][slot-12]); if(slot===12) kick(t,.9); }
+    else{
+      if(st.kick.includes(slot)) kick(t, slot===0?1:slot%4===0?.8:.6);
+      if(st.snare.includes(slot)) snare(t,1);
+      if(st.hat.includes(slot)) hat(t,false, slot%4===0?.3:.18);
+      if(st.open.includes(slot)) hat(t,true,.2);
+    }
+  }
+  if(P.click && slot%4===0) click(t, slot===0);
+  if(P.bass){ const i=st.bass.indexOf(slot); if(i>=0){
+    const nxt=i+1<st.bass.length?st.bass[i+1]:16; let off=st.oct&&slot%4===2?12:0;
+    if(pb===3&&slot>=12) off=slot>=14?12:7; else if(pb===1&&slot===14) off=7;   // little walk-ups so the bass isn't static
+    bass(t,V.bass+off,(nxt-slot)*sd*0.9);
+  }}
+  if(P.gtr){
+    if(st.gtr==="chug"){ if(slot%2===0) slot===0||slot===8 ? guitar(t,V.gtr,(slot===0?3:2)*sd,false,slot===0?1:.75) : guitar(t,V.gtr,sd,true,slot%4===0?.8:.6); }
+    else if(slot===0||slot===8) guitar(t,V.gtr,7*sd,false,slot===0?1:.75);
+  }
+  if(P.keys && slot===0) keys(t,V.keys,16*sd);
+}
+function schedule(){
+  while(nextT < ctx.currentTime+0.12){ playStep(step,nextT,playingK); queue.push([step,nextT]); nextT+=sixDur(); step++; }
+}
+function bandStart(k){
+  bus=makeBus(); playingK=k; step=-16; queue=[]; cur=null; nextT=ctx.currentTime+0.1;
+  schedule(); timer=setInterval(schedule,25);
+}
+function bandStop(){
+  clearInterval(timer); timer=null; playingK=null; queue=[];
+  if(bus){ const m=bus.master; m.gain.setTargetAtTime(0.0001,ctx.currentTime,0.02); setTimeout(()=>{try{m.disconnect()}catch(e){}},400); bus=null; }
+}
+
+const PAGES=[
+ {k:"c", roman:"I", name:"C Major", tones:["C","E","G"], lh:"Left hand (once the right hand is solid): hold a low C for the whole bar, played on beat 1.",
+  ex:[
+   {lvl:"Level 1 · Whole notes", t:"Long and steady", p:"Hold each note for all 4 beats. Change to the next note right on the big kick on beat 1.", seq:[["C",16],["E",16],["G",16],["E",16]]},
+   {lvl:"Level 2 · Half notes", t:"Two per bar", p:"Play on beat 1 and beat 3, which are both kick drum hits. Hold through the snare.", seq:[["C",8],["E",8],["G",8],["E",8]]},
+   {lvl:"Level 3 · Quarter notes", t:"One per beat", p:"Count out loud: 1, 2, 3, 4. Your 2nd and 4th notes land with the snare.", seq:[["C",4],["E",4],["G",4],["E",4]]},
+   {lvl:"6-note pattern · Slow", t:"C C C E … G G, stretched over 2 bars", p:"Bar 1: four quarter notes. Bar 2: two half notes. These are the same 6 notes you'll play fast two levels from now.", seq:[["C",4],["C",4],["C",4],["E",4],["G",8],["G",8]]},
+   {lvl:"Level 4 · Eighth notes", t:"Roll the triad", p:"Two notes per beat: 1 & 2 & 3 & 4 &. The 3-note shape doesn't fit evenly into 8, so it restarts on C every bar.", seq:[["C",2],["E",2],["G",2],["C",2],["E",2],["G",2],["C",2],["E",2]]},
+   {lvl:"6-note pattern · Quick-quick-long", t:"Two halves of three", p:"“C C C” starts on beat 1 and “E G G” starts on beat 3, and both start with the kick. Say “quick-quick-long, quick-quick-long”.", seq:[["C",2],["C",2],["C",4],["E",2],["G",2],["G",4]]},
+   {lvl:"Level 5 · Mixed", t:"Walk, walk, run-ning, run-ning", p:"Two quarters, then four eighths. Keep the eighths even, with no rushing.", seq:[["C",4],["C",4],["C",2],["E",2],["G",2],["G",2]]},
+   {lvl:"Level 6 · Demons groove", t:"Play with the kick drum", p:"Play only when the kick plays: 1, 2-a, 3, 4-e. The quick E right before beat 3 is the hard part. Say “one … two-e-and-A three … four-E”.", seq:[["C",7],["E",1],["G",5],["E",3]], drums:true},
+  ]},
+ {k:"g", roman:"V", name:"G Major", tones:["G","B","D"], lh:"Left hand: hold a low G for the whole bar, played on beat 1.",
+  ex:[
+   {lvl:"Level 1 · Whole notes", t:"Walk down from the top", p:"Start on the top note D and go down: D, B, G, then back to B. Four beats each.", seq:[["D",16],["B",16],["G",16],["B",16]]},
+   {lvl:"Level 2 · Half notes", t:"Jump to the top", p:"Root, then leap up to the 5th. Beats 1 and 3.", seq:[["G",8],["D",8],["B",8],["D",8]]},
+   {lvl:"Level 3 · Quarter notes + rest", t:"Three and a breath", p:"Play beats 1, 2, 3 and rest on beat 4. Let the snare fill the gap and don't come in early.", seq:[["G",4],["B",4],["D",4],[null,4]]},
+   {lvl:"6-note pattern · Slow", t:"D D D B … G G, stretched over 2 bars", p:"The 6-note pattern played backwards, from the top down. Four quarters, then two half notes. It's slow, so make every note land exactly on the beat.", seq:[["D",4],["D",4],["D",4],["B",4],["G",8],["G",8]]},
+   {lvl:"Level 4 · Eighth notes", t:"Fast down, then wait", p:"Six eighths down the chord, then rest for a whole beat. Come back exactly on the next beat 1.", seq:[["D",2],["D",2],["D",2],["B",2],["G",2],["G",2],[null,4]]},
+   {lvl:"6-note pattern · Quick-quick-long", t:"Same notes, new rhythm", p:"The same 6 notes as the last level, now split into two groups: “D D D” on beat 1 and “B G G” on beat 3. No rest this time.", seq:[["D",2],["D",2],["D",4],["B",2],["G",2],["G",4]]},
+   {lvl:"Level 5 · Mixed", t:"Long, short, short", p:"Half, quarter, quarter. Bar 2 flips the direction.", seq:[["G",8],["B",4],["D",4],["D",8],["B",4],["G",4]]},
+   {lvl:"Level 6 · Demons groove", t:"Play with the kick drum", p:"Same kick rhythm as page 1, new notes. 1, 2-a, 3, 4-e.", seq:[["G",7],["B",1],["D",5],["B",3]], drums:true},
+  ]},
+ {k:"am", roman:"vi", name:"A minor", tones:["A","C","E"], lh:"Left hand: hold a low A for the whole bar, played on beat 1. The 3 here is a minor third. That's what makes it sound darker.",
+  ex:[
+   {lvl:"Level 1 · Whole notes", t:"Feel the minor sound", p:"Four beats each. Listen to how C (the minor third) sounds against the track.", seq:[["A",16],["C",16],["E",16],["C",16]]},
+   {lvl:"Level 2 · Dotted half + quarter", t:"Hold three, play one", p:"A dotted half lasts 3 beats. Then play one quarter on beat 4, with the snare.", seq:[["A",12],["C",4],["E",12],["C",4]]},
+   {lvl:"Level 3 · Quarter notes", t:"Top down", p:"One per beat, starting from the top: E, C, A, C.", seq:[["E",4],["C",4],["A",4],["C",4]]},
+   {lvl:"6-note pattern · Slow", t:"A A A C … E E, stretched over 2 bars", p:"Four quarter notes, then two half notes on E. Count every beat out loud.", seq:[["A",4],["A",4],["A",4],["C",4],["E",8],["E",8]]},
+   {lvl:"Level 4 · Eighth notes", t:"Up and back", p:"1-3-5-3 twice, as eighths. Keep the hand still and just move your fingers.", seq:[["A",2],["C",2],["E",2],["C",2],["A",2],["C",2],["E",2],["C",2]]},
+   {lvl:"6-note pattern · Quick-quick-long", t:"Two halves of three", p:"“A A A” on beat 1, “C E E” on beat 3. Quick-quick-long, twice per bar.", seq:[["A",2],["A",2],["A",4],["C",2],["E",2],["E",4]]},
+   {lvl:"Level 5 · Off-beats", t:"Play with the hi-hat", p:"The hardest one on this page. Rest on every beat and play only on the “&”, exactly with the hi-hat. Count “1 AND 2 AND” and play on the ANDs.", seq:[[null,2],["A",2],[null,2],["C",2],[null,2],["E",2],[null,2],["C",2]], drums:true},
+   {lvl:"Level 6 · Demons groove", t:"Play with the kick drum", p:"Kick rhythm, starting from the top note this time.", seq:[["E",7],["C",1],["A",5],["C",3]], drums:true},
+  ]},
+ {k:"f", roman:"IV", name:"F Major", tones:["F","A","C"], lh:"Left hand: hold a low F for the whole bar, played on beat 1.",
+  ex:[
+   {lvl:"Level 1 · Whole notes", t:"Big jumps", p:"F up to C, back to A, home to F. Four beats each.", seq:[["F",16],["C",16],["A",16],["F",16]]},
+   {lvl:"Level 2 · Half notes", t:"Come home to F", p:"Every second note is the root F.", seq:[["C",8],["F",8],["A",8],["F",8]]},
+   {lvl:"Level 3 · Quarter + half", t:"Short, short, long", p:"Two quarters, then hold a half note for beats 3 and 4.", seq:[["F",4],["A",4],["C",8],["C",4],["A",4],["F",8]]},
+   {lvl:"6-note pattern · Slow", t:"C C C A … F F, stretched over 2 bars", p:"Top down: three Cs, an A, then two long Fs. Four quarters, then two half notes.", seq:[["C",4],["C",4],["C",4],["A",4],["F",8],["F",8]]},
+   {lvl:"Level 4 · Eighth notes", t:"Roll the triad", p:"F A C over and over as eighths. It restarts on F each bar, just like page 1.", seq:[["F",2],["A",2],["C",2],["F",2],["A",2],["C",2],["F",2],["A",2]]},
+   {lvl:"6-note pattern · Quick-quick-long", t:"Two halves of three", p:"“C C C” on beat 1, “A F F” on beat 3. Both groups start with the kick.", seq:[["C",2],["C",2],["C",4],["A",2],["F",2],["F",4]]},
+   {lvl:"Level 5 · Mixed", t:"Run, then land", p:"Five quick eighths, then hold F for 3 beats until the next beat 1.", seq:[["C",2],["C",2],["C",2],["A",2],["F",8]]},
+   {lvl:"Level 6 · Demons groove", t:"Full groove, two bars", p:"The kick rhythm twice: up the chord in bar 1, down in bar 2.", seq:[["F",7],["A",1],["C",5],["A",3],["C",7],["A",1],["F",5],["A",3]], drums:true},
+  ]},
+];
+
+const deg=(pg,n)=>({[pg.tones[0]]:1,[pg.tones[1]]:3,[pg.tones[2]]:5})[n];
+const durName={16:"whole",12:"dotted half",8:"half",6:"dotted quarter",4:"quarter",2:"eighth",1:"16th",7:"",5:"",3:""};
+let store={}; try{store=JSON.parse(localStorage.getItem("demons-done")||"{}")}catch(e){}
+const save=()=>{try{localStorage.setItem("demons-done",JSON.stringify(store))}catch(e){}};
+
+function el(tag,cls,html){const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e}
+
+function countRow(){const g=el("div","g"); COUNTS.forEach((c,i)=>g.appendChild(el("div","cnt"+(i%4===0?" b":""),c))); return g}
+function drumRow(){const g=el("div","g drums");
+  const add=(slots,c)=>slots.forEach(s=>{const d=el("div","dk "+c,"<span></span>");d.style.gridColumn=(s+1)+"/span 1";g.appendChild(d)});
+  add(DRUMS.kick,"k"); add(DRUMS.snare,"s"); add(DRUMS.hat.filter(s=>!DRUMS.kick.includes(s)),"h"); return g}
+
+function buildBars(pg,ex){
+  const total=ex.seq.reduce((a,s)=>a+s[1],0), nb=total/16, wrap=el("div","bars");
+  const grids=[]; let pos=0;
+  for(let b=0;b<nb;b++){
+    const bar=el("div","bar"); if(nb>1) bar.appendChild(el("div","barnum","BAR "+(b+1)));
+    bar.appendChild(countRow());
+    const g=el("div","g notes"); const ph=el("div","ph"); g.appendChild(ph); grids.push(ph);
+    bar.appendChild(g); if(ex.drums) bar.appendChild(drumRow());
+    wrap.appendChild(bar);
+  }
+  ex.seq.forEach(([n,d])=>{
+    let s=pos; let left=d;
+    while(left>0){ const b=Math.floor(s/16), off=s%16, len=Math.min(left,16-off);
+      const g=wrap.children[b].querySelector(".notes");
+      const nEl=el("div","n "+(n?("x"+deg(pg,n)):"r"), n? n : "rest");
+      nEl.style.gridColumn=(off+1)+"/span "+len; nEl.title=n?(n+" · "+(durName[d]||d+" sixteenths")):"rest";
+      g.appendChild(nEl); s+=len; left-=len; }
+    pos+=d;
+  });
+  return {wrap,grids,nb};
+}
+
+const tabs=document.getElementById("tabs"), pages=document.getElementById("pages");
+let regs={};
+
+function renderDrumMap(k){
+  const st=STYLES[S.style], R=regs[k], rows=R.rows; rows.innerHTML=""; R.dm=[];
+  rows.appendChild(el("div","lab","")); rows.appendChild(countRow());
+  const lane=(lab,slots,c)=>{rows.appendChild(el("div","lab",lab)); const g=el("div","g lane");
+    slots.forEach(s=>{const d=el("div","dk "+c,"<span></span>");d.style.gridColumn=(s+1)+"/span 1";g.appendChild(d)});
+    const ph=el("div","ph"); g.appendChild(ph); R.dm.push(ph); rows.appendChild(g)};
+  lane(st.open.length?"OPEN HAT":"HI-HAT", st.open.length?st.open:st.hat,"h"); lane("SNARE",st.snare,"s"); lane("KICK",st.kick,"k");
+  R.title.textContent=st.name+" groove"; R.say.innerHTML="<em>say it:</em> "+st.say;
+}
+function syncControls(){
+  document.querySelectorAll("[data-style]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.style===S.style));
+  document.querySelectorAll("[data-part]").forEach(b=>b.setAttribute("aria-pressed",!!S.parts[b.dataset.part]));
+  document.querySelectorAll(".bpm").forEach(e=>e.textContent=S.tempo+" BPM");
+  PAGES.forEach(p=>renderDrumMap(p.k));
+  try{localStorage.setItem("demons-band",JSON.stringify(S))}catch(e){}
+}
+try{const saved=JSON.parse(localStorage.getItem("demons-band")||"null"); if(saved&&STYLES[saved.style]){S.style=saved.style; S.tempo=saved.tempo||75; Object.assign(S.parts,saved.parts||{});}}catch(e){}
+
+PAGES.forEach((pg,pi)=>{
+  const t=el("button","tab",`${pg.name} <small>${pg.roman}</small>`); t.dataset.k=pg.k; t.setAttribute("role","tab"); t.id="tab-"+pg.k;
+  t.onclick=()=>show(pg.k,true); tabs.appendChild(t);
+
+  const sec=el("section","page"); sec.dataset.k=pg.k; sec.id="p-"+pg.k; sec.setAttribute("role","tabpanel"); sec.hidden=true;
+  const head=el("div","phead");
+  const left=el("div");
+  left.innerHTML=`<div class="eyebrow">Page ${pi+1} of 4 · the ${pg.roman} chord</div><h2>${pg.name}</h2>
+   <div class="tones">${pg.tones.map((n,i)=>`<div class="tone t${[1,3,5][i]}">${n}<small>${[1,3,5][i]}</small></div>`).join("")}</div>
+   <div class="lh">${pg.lh}</div>`;
+  head.appendChild(left); sec.appendChild(head);
+
+  const pl=el("div","player");
+  pl.innerHTML=`<div class="prow">
+      <button class="pbtn" id="play-${pg.k}">▶ Play</button>
+      <div class="dots" id="dots-${pg.k}" aria-hidden="true"><div class="dot one">1</div><div class="dot">2</div><div class="dot">3</div><div class="dot">4</div></div>
+      <div class="readout" id="ro-${pg.k}"><span class="big">Ready</span></div>
+    </div>
+    <div class="prow">
+      <div class="ctl"><span class="cl">Groove</span>${Object.entries(STYLES).map(([k,v])=>`<button class="chip" data-style="${k}">${v.name}</button>`).join("")}</div>
+      <div class="ctl"><span class="cl">Tempo</span><button class="chip sq" data-tempo="-5" aria-label="Slower">−</button><span class="bpm"></span><button class="chip sq" data-tempo="5" aria-label="Faster">+</button></div>
+    </div>
+    <div class="ctl"><span class="cl">Band</span>${[["drums","Drums"],["bass","Bass"],["gtr","Guitar"],["keys","Keys"],["click","Beat click"]].map(([k,v])=>`<button class="chip" data-part="${k}">${v}</button>`).join("")}</div>`;
+  sec.appendChild(pl);
+
+  regs[pg.k]={ex:[],dm:[]};
+  const dm=el("div","ex drummap");
+  dm.innerHTML=`<div class="lvl">Your metronome</div><h3></h3>
+   <p>The drums repeat the same pattern every bar. Kick on beat 1 is the strongest hit. The snare is always on beats 2 and 4.</p>`;
+  const rows=el("div","rows"); dm.appendChild(rows); const say=el("div","say"); dm.appendChild(say);
+  Object.assign(regs[pg.k],{rows,title:dm.querySelector("h3"),say});
+  sec.appendChild(dm);
+
+  pg.ex.forEach((ex,ei)=>{
+    const id=pg.k+"-"+ei; const box=el("div","ex");
+    const notes=ex.seq.map(s=>s[0]||"–").join(" ");
+    box.innerHTML=`<div class="ex-h"><div style="min-width:0"><div class="lvl">Level ${ei+1} · ${ex.lvl.replace(/^Level \d+ · /,"")}</div><h3>${ex.t}</h3><p>${ex.p}</p><div class="seq">${notes}</div>
+      ${ex.drums?'<button class="usegroove" data-style="demons">Use the Demons groove for this level</button>':''}</div>
+     <label class="done"><input type="checkbox" id="done-${id}" ${store[id]?"checked":""}> 3 clean loops</label></div>`;
+    const {wrap,grids,nb}=buildBars(pg,ex); box.appendChild(wrap);
+    regs[pg.k].ex.push({grids,nb});
+    box.querySelector("input").onchange=e=>{store[id]=e.target.checked; save()};
+    sec.appendChild(box);
+  });
+  pages.appendChild(sec);
+  sec.querySelector(".pbtn").onclick=()=>toggle(pg.k);
+});
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-style],[data-part],[data-tempo]"); if(!b) return;
+  if(b.dataset.style){ S.style=b.dataset.style; if(b.classList.contains("usegroove")) window.scrollTo({top:0,behavior:"smooth"}); }
+  if(b.dataset.part){ S.parts[b.dataset.part]=!S.parts[b.dataset.part]; }
+  if(b.dataset.tempo){ S.tempo=Math.min(120,Math.max(50,S.tempo+ +b.dataset.tempo)); }
+  syncControls();
+});
+
+function show(k,push){
+  PAGES.forEach(p=>{const on=p.k===k; document.getElementById("p-"+p.k).hidden=!on; document.getElementById("tab-"+p.k).setAttribute("aria-selected",on)});
+  if(playingK && playingK!==k) stop();
+  if(push){ try{history.replaceState(null,"","#"+k)}catch(e){location.hash=k} window.scrollTo({top:0}); }
+}
+function toggle(k){
+  if(playingK===k){ stop(); return; }
+  stop();
+  ensureCtx().then(()=>{ bandStart(k); document.getElementById("play-"+k).textContent="■ Stop"; tick(); })
+    .catch(()=>{document.getElementById("ro-"+k).innerHTML='<span class="big">Tap again</span>'});
+}
+function stop(){
+  const k=playingK; bandStop(); cancelAnimationFrame(raf); if(!k) return;
+  document.getElementById("play-"+k).textContent="▶ Play";
+  document.querySelectorAll(`#p-${k} .ph`).forEach(p=>p.classList.remove("on"));
+  document.querySelectorAll(`#dots-${k} .dot`).forEach(d=>d.classList.remove("on"));
+  document.getElementById("ro-"+k).innerHTML='<span class="big">Ready</span>';
+}
+let raf=0, cur=null;
+function tick(){
+  const k=playingK; if(!k) return;
+  const now=ctx.currentTime;
+  while(queue.length && queue[0][1]<=now){ cur=queue.shift()[0]; }
+  if(cur!==null){
+    const ro=document.getElementById("ro-"+k), R=regs[k], dots=document.querySelectorAll(`#dots-${k} .dot`);
+    if(cur<0){
+      const b=Math.floor((cur+16)/4);
+      ro.innerHTML=`<span class="big">Count-in ${b+1}…</span>`;
+      dots.forEach((d,i)=>d.classList.toggle("on",i===b));
+    }else{
+      const bar=Math.floor(cur/16), slot=cur%16, b=Math.floor(slot/4);
+      ro.innerHTML=`<span class="big">Beat ${b+1}</span><br><span style="color:var(--muted)">bar ${bar+1}</span>`;
+      dots.forEach((d,i)=>d.classList.toggle("on",i===b));
+      R.dm.forEach(ph=>{ph.style.gridColumn=(slot+1)+"/span 1"; ph.classList.add("on")});
+      R.ex.forEach(({grids,nb})=>{const bb=bar%nb; grids.forEach((ph,i)=>{ if(i===bb){ph.style.gridColumn=(slot+1)+"/span 1"; ph.classList.add("on")} else ph.classList.remove("on")})});
+    }
+  }
+  raf=requestAnimationFrame(tick);
+}
+
+syncControls();
+const fromHash=()=>{const h=(location.hash||"").slice(1); return PAGES.some(p=>p.k===h)?h:"c"};
+show(fromHash(),false);
+window.addEventListener("hashchange",()=>show(fromHash(),false));
+</script>
+
+</body>
+</html>
